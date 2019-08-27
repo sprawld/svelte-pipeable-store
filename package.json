@@ -1,0 +1,20 @@
+{
+  "name": "svelte-pipeable-store",
+  "version": "1.0.0",
+  "description": "",
+  "main": "store.js",
+  "type": "module",
+  "scripts": {
+    "test": "mocha --require esm test/*.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "lodash": "^4.17.15"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "esm": "^3.2.25",
+    "mocha": "^6.2.0"
+  }
+}
