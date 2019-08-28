@@ -9,24 +9,14 @@ import {readable} from "../store.js";
  * @params {number} n Number before finishing
  * @returns {{subscribe, pipe, clear}}
  */
-export function take(num) {
+export function take(n) {
     return src => {
         let count = 0;
-        let {subscribe, pipe} = readable(undefined, set => {
-            let unsub = src.subscribe(v => {
-                if(count++ < num) {
-                    set(v)
-                } else {
-                    unsub();
-                }
-            });
-            return () => {
-                if(count <= num) {
-                    unsub();
-                }
+        let {subscribe, pipe} = readable(undefined, set => src.subscribe(value => {
+            if(count++ < n) {
+                set(value);
             }
-        });
-
+        }));
         return {
             subscribe, pipe,
             clear() {

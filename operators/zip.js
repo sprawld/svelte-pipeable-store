@@ -1,20 +1,23 @@
 
-import {readable} from '../store.js';
-import {run_all} from '../internal.js';
+import {derived} from "../store.js";
 
 /**
  * zip
  *
- * When any source store fires, the destination store updates
- *
- * @param {...{subscribe}} stores Source stores
+ * @param {Object} obj
  * @returns {{subscribe, pipe}}
  */
-export function zip(...stores) {
-
-    return readable(undefined, set => {
-        let subs = stores.map(store => store.subscribe(set));
-        return () => run_all(subs);
-    });
-
+export function zip(obj) {
+    if(Array.isArray(obj)) {
+        return derived(obj, a => a);
+    } else if(typeof obj === 'object') {
+        let keys = Object.keys(obj);
+        return derived(
+            keys.map(key => obj[key]),
+            a => keys.reduce((o,key) => {
+                o[key] = a[key];
+                return o;
+            },{})
+        );
+    }
 }

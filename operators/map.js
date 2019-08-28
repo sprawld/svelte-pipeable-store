@@ -7,7 +7,7 @@ import {readable} from '../store.js';
  * same as derived(store, iterator)
  *
  * @params {function} iterator Map function returning destination store value
- * @returns {{subscribe, pipe}}
+ * @returns {function({subscribe, pipe}): {subscribe, pipe}} Readable operator
  */
 export function map(iterator) {
 

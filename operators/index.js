@@ -21,3 +21,9 @@ export { wait } from './wait.js';
 // Generators
 export { merge } from './merge.js';
 export { zip } from './zip.js';
+
+
+// I couldn't stop replicating RxJS
+export { startWith } from './startWith.js';
+export { withLatestFrom } from './withLatestFrom.js';
+

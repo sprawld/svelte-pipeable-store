@@ -8,7 +8,7 @@ import {readable} from '../store.js';
  * same as derived(store, (value, set) => { if(iterator(value)) set(value); })
  *
  * @params {function} iterator Test function (value) => boolean
- * @returns {{subscribe, pipe}}
+ * @returns Readable Operator {Function({subscribe, pipe}):}
 */
 export function filter(iterator) {
 

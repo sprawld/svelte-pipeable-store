@@ -224,9 +224,7 @@ const scanned = derived(count, (n, set) => {
 });
 ```
 
-Operators like `scan` and `skip(n)` (skip first n subscriptions) can be achieved using an external variable.
-`take(n)` (stop after n events) is a little more difficult, since ideally you want to unsubscribe from `count` after n events.
-I don't know a way to do this with a derived store, though it's not too much bother to code.
+Operators like `scan` (and `concat`, `take` and `skip`) can all be achieved with an external variable
 
 With the `debounce` and `throttle` operators there's a chance for extension.
 Lo-dash's debounce provides `flush()` and `cancel()` methods.
@@ -244,8 +242,8 @@ const debounced = count.pipe(debounce(1000)) ->
 
 One last complex operator to highlight encapsulation.
 Without lodash to crib off I wrote my own `wait` operator (as such I have no idea if the code's particularly good).
-This awaits a Promise before updating the destination store.
-The operator maintains a queue, so that older updates don't overwrite newer ones that resolved first.
+The `wait` operator awaits a Promise before updating the destination store.
+It maintains a queue, so that older updates don't overwrite newer results if they resolve first.
 This also allows options to run in series (`queue`), wait for pending Promises then perform last one only (`exhaust`)
 or ignore the result from pending Promises (`discard`) 
 
@@ -283,7 +281,7 @@ function concat() -> {
 }
 ```
 Actually, the `clear` method is a shorthand, since the `writable` store methods `set` and `update` are included too.
-`concat` is a _writable operator_. It doesn't care if you want to update its state.
+`concat` is a _writable operator_. It doesn't care if you want to filter it's list or overwrite it.
 
 Concat is perhaps too narrowly defined an operator, since it's just scan (specifically `scan((acc,item) => [...acc, item])`).
 `scan` contains the core principle: an external variable updated by an iterator.
@@ -298,7 +296,7 @@ const read_native = score.pipe(({subscribe, pipe}) => ({subscribe, pipe}));
 ```
 
 Readonly is so simple, you can also write your own operator as a one-liner.
-Pipes are also a handy way to create custom stores : )
+Pipes also provide a handy way to create custom stores : )
 
 ```javascript
 const user = writable({});
