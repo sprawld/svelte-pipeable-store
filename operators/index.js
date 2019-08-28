@@ -3,6 +3,7 @@
 export { map } from './map.js';
 export { filter } from './filter.js';
 export { scan } from './scan.js';
+
 export { pluck } from './pluck.js';
 export { concat } from './concat.js';
 export { tap } from './tap.js';
@@ -19,3 +20,4 @@ export { wait } from './wait.js';
 
 // Generators
 export { merge } from './merge.js';
+export { zip } from './zip.js';

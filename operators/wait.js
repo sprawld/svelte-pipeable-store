@@ -65,10 +65,15 @@ export function wait(iterator, options = {}) {
 
             item.promise.then(res => {
                 // if newest result, set dest store
-                if(current < index && !item.cancel) {
+                if (current < index && !item.cancel) {
                     set(res);
                     current = index;
                 }
+            }, err => {
+                if(!item.cancel) {
+                    error(err);
+                }
+            }).then(() => {
                 pending--;
                 if(pending === 0 && current === list.length - 1) {
                     return flush();
@@ -78,10 +83,6 @@ export function wait(iterator, options = {}) {
                 }
                 if(exhaust) {
                     return run(list.length-1);
-                }
-            }, err => {
-                if(!item.cancel) {
-                    error(err);
                 }
             });
         }
