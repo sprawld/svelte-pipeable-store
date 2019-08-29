@@ -1,6 +1,6 @@
 {
   "name": "svelte-pipeable-store",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Fork of Svelte v3 store with pipe method",
   "main": "store.js",
   "type": "module",
