@@ -1,5 +1,5 @@
 
-import {readable} from "../store.js";
+import {readable, writable} from "../store.js";
 
 /**
  *  bufferCount [readable]
@@ -10,7 +10,7 @@ import {readable} from "../store.js";
 */
 export function bufferCount(n) {
 
-    return src => readable(undefined, set => {
+    return src => writable(undefined, set => {
         let list = [];
         return src.subscribe(value => {
             list.push(value);
@@ -51,29 +51,4 @@ export function bufferTime(time) {
             clearInterval(timeout);
         }
     });
-}
-
-/**
- * bufferWhen [readable]
- *
- * @params {Store} signal Subscribable object to signal when to release buffer
-*/
-
-export function bufferWhen(signal) {
-    return src => {
-        return readable(undefined, set => {
-            let list = [];
-            let subSignal = signal.subscribe(v => {
-                set(list);
-                list = [];
-            });
-            let subSrc = src.subscribe(v => {
-                list.push(v);
-            });
-            return () => {
-                subSignal();
-                subSrc();
-            }
-        });
-    }
 }

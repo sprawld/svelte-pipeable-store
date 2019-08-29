@@ -16,7 +16,7 @@ npm install 'svelte-pipeable-store';
 
 ### Usage
 
-Similarish syntax to RxJS. 
+Similarish syntax to RxJS. [Read API docs](https://github.com/sprawld/svelte-pipeable-store/blob/master/API.md)
 
 ```javascript
 import {readable, writable, derived} from 'svelte-pipeable-store';

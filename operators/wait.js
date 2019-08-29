@@ -31,15 +31,16 @@ export function wait(iterator, options = {}) {
         error = noop,
     } = options;
 
-    return ({subscribe}) => readable(undefined, set => {
+    return src => {
 
-        let list, current, pending;
-        flush();
+        let list, current, pending, cancelled;
+        clear();
 
-        function flush() {
+        function clear() {
             list = [];
             current = -1;
             pending = 0;
+            cancelled = false;
         }
 
         function run(index) {
@@ -75,23 +76,40 @@ export function wait(iterator, options = {}) {
                 }
             }).then(() => {
                 pending--;
-                if(pending === 0 && current === list.length - 1) {
-                    return flush();
+                if(pending === 0 && current >= list.length - 1) {
+                    return clear();
                 }
-                if(queue) {
+                if(queue && !cancelled) {
                     return run(index+1);
                 }
-                if(exhaust) {
+                if(exhaust && !cancelled) {
                     return run(list.length-1);
                 }
             });
         }
 
-        return subscribe(value => {
-            let index = list.length;
-            list.push({value});
-            run(index);
+        function cancel() {
+            current = list.length - 1;
+            cancelled = true;
+            list.forEach(item => {
+                if(item && !item.cancel && has_cancel(item.promise)) {
+                    item.cancel = true;
+                    item.promise.cancel();
+                }
+            });
+        }
+
+        let {subscribe, pipe} = readable(undefined, set => {
+
+
+            return src.subscribe(value => {
+                let index = list.length;
+                list.push({value});
+                run(index);
+            });
+
         });
 
-    });
+        return { subscribe, pipe, cancel }
+    }
 }

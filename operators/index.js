@@ -14,8 +14,8 @@ export { skip } from './skip.js';
 export { readonly } from './readonly.js';
 
 export { debounce, throttle } from './debounce.js';
-export { bufferCount, bufferTime, bufferWhen } from './buffer.js';
-
+export { bufferCount, bufferTime } from './buffer.js';
+export { delay } from './delay.js';
 export { wait } from './wait.js';
 
 // Generators
