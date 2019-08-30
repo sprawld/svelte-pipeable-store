@@ -49,7 +49,7 @@ export function debounce(wait, options) {
  *  @returns {{subscribe, pipe, cancel, flush}}
 */
 export function throttle(wait, options) {
-    return debounce(func, wait, {
+    return debounce(wait, {
         ...options,
         'maxWait': wait,
     });

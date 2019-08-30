@@ -43,7 +43,7 @@ export function wait(iterator, options = {}) {
             cancelled = false;
         }
 
-        function run(index) {
+        function run(set, index) {
 
             // If other tasks are pending, don't run if using any option (exhaust, queue)
             if(pending && (exhaust || queue)) {
@@ -80,10 +80,10 @@ export function wait(iterator, options = {}) {
                     return clear();
                 }
                 if(queue && !cancelled) {
-                    return run(index+1);
+                    return run(set, index+1);
                 }
                 if(exhaust && !cancelled) {
-                    return run(list.length-1);
+                    return run(set, list.length-1);
                 }
             });
         }
@@ -105,7 +105,7 @@ export function wait(iterator, options = {}) {
             return src.subscribe(value => {
                 let index = list.length;
                 list.push({value});
-                run(index);
+                run(set, index);
             });
 
         });

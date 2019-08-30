@@ -15,10 +15,13 @@ export function zip(obj) {
         let keys = Object.keys(obj);
         return derived(
             keys.map(key => obj[key]),
-                a => keys.reduce((o,key) => {
-                o[key] = a[key];
-                return o;
-            },{})
+            a => {
+                let res = {};
+                keys.forEach((key, index) => {
+                    res[key] = a[index];
+                });
+                return res;
+            }
         );
     }
 }
