@@ -42,6 +42,8 @@ const score_elem = score.pipe(                          // if a store's state ca
 )
 ```
 
+[I've also made an example REPL with a counter](https://svelte.dev/repl/df4cbb0aaac44b769a3cbeed0cb0af59?version=3.9.1)
+
 Currently this is a speculative project (feedback welcome!)
 But I think `pipe` is a useful addition to Svelte's store pattern.
 Here's my pitch for why it should be added:
@@ -304,6 +306,37 @@ const custom = user.pipe(({subscribe, pipe, set, update}) => ({
         set({});
     }
 }));
+```
+
+That's basically my pitch. 
+
+If I've convinced you, you may be asking what's the point of the `derived` store?
+It is, of course, the multiple source syncing.
+But hell, while I'm duplicating RxJS, why not copy a couple of generators?
+Unlike the `derived` store, these have no mapping function, but you can now use map
+
+```javascript
+
+// user subscribes with object with same keys, and values of each store
+// zip also works for arrays, a-la the derived store
+
+const user = zip({
+    user: userStore,
+    messages: messageStore,
+    preferences: preferenceStore
+});
+
+// destination updates with any new message from any source
+
+const messages = merge(
+    messagesStore,
+    otherMessagesStore,
+    systemMessagesStore
+);
+
+// whenever user updates, login screen updates with the latest value from systemMessagesStore
+const loginScreen = user.pipe(getLatestFrom(systemMessagesStore));
+
 ```
 
 #### A note on initialisation
