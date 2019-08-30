@@ -1,5 +1,5 @@
 
-# Pipeable Store
+# Svelte Pipeable Store
 
 This is a fork for [Svelte](https://svelte.dev/)'s store, adding a `pipe` method.
 Stores can be piped through a number of operators. Synchronous operators include:
@@ -29,6 +29,7 @@ import {
 const counter = writable(0);
 const score = counter.pipe(filter(n => n%2 === 0))      // only odd scores count
                      .pipe(scan((acc,n) => acc + n, 0));// add to total
+
 const score_sheet = score.pipe(
     map(n => `total: ${n}`),                            // you can put multiple
     concat()                                            // operators in one call to pipe
@@ -42,11 +43,12 @@ const score_elem = score.pipe(                          // if a store's state ca
 ```
 
 Currently this is a speculative project (feedback welcome!)
-But I think `pipe` is a useful addition to Svelte's store pattern. Here's my pitch for why it should be added:
+But I think `pipe` is a useful addition to Svelte's store pattern.
+Here's my pitch for why it should be added:
 
 ## My Pitch
 
-I'm quite a fan of [Svelte's](https://svelte.dev/) subscribable store pattern.
+I'm a big fan of [Svelte's](https://svelte.dev/) subscribable store pattern.
 The two aspect I like: its _simplicity_ and _extendability_. 
 
 The core of the pattern is the `writable` store. It has only 3 functions. 
@@ -97,7 +99,7 @@ Even if not, you've got unnecessary `complete` and `error` methods complicating 
 Observables have their purpose, but perhaps not for permenant stores.
 
 However, without wishing to add _too_ much complexity and completely contradict everything I've just said,  
-I'd humbly suggest adding one RxJS feature to the Svelte store: *a `pipe` method*.
+I'd humbly suggest adding one RxJS feature to the Svelte store: **a `pipe` method**.
 
 ## Pipes and Operators
 
@@ -115,7 +117,7 @@ function writable(value, start = noop) {
 }
 
 function readable(value, start) {
-	const {subscribe, pipe} = writable(value, start);
+    const {subscribe, pipe} = writable(value, start);
     return {subscribe, pipe}
 }
 
@@ -134,7 +136,8 @@ Operator = Store -> Store
 ```
 
 I've created a few example operators, based loosely on RxJS. Let's start simple with
-`map`, `filter` and `scan` (analogous to Array.reduce). Let's go back to the traditional counter example:
+`map`, `filter` and `scan` (analogous to Array.reduce).
+I'll go back to the traditional counter example:
 
 ```javascript
 import {writable} from 'store';
@@ -173,14 +176,14 @@ I haven't mentioned yet the `derived` store. Which you could argue performs all 
 Actually it can do a lot more: particularly allowing multiple inputs.
 
 Piped operators provide a more readable, declarative syntax, which is good in-and-of itself.
-And while adding `pipe` to the stores requires little addition to the codebase, 
-a plethora of operators is a larger task.
-Alternatively users could write their own, but then why wouldn't you use a `derived` store?
+And while `pipe` adds little extra weight codebase, a toolkit of Operators does.
+Alternatively users could be asked to write their own,
+but then why wouldn't you use a `derived` store?
 
 I'm going to argue that piped operators provide helpful function encapsulation & pattern reuse. 
 It retains the simplicity of the original store API, while allowing space for some extensions.
 And that a few useful patterns (at least `map`,`filter` and `scan`, `debounce` and `wait`) 
-are worthy of adding to the svelte store.
+are worthy of providing out-of-the-box.
 
 If we start with the `map` operator, this can be done trivially with a `derived` store:
 
@@ -198,33 +201,25 @@ const filtered = derived(count, (n, set) => {
     }
 });
 ```
-#### A note on initialisation
 
-When subscribing to a `writable` store, the subscription callback is immediately fired with the current value.
-I presume this is because of Svelte's design which immediately subscribes to all referenced stores (eg with `$count`).
-Often you have a store with no initial state (like an _authenticated_ user store).
-For any derived store with a filter, the initial state may not pass the filter function, so you certainly don't want it fire.
-To address this I've added one more line to the `writable` subscribe function
 
-```javascript
-	if(value !== undefined) {
-    	run(value);
-    }
-```
-
-This doesn't change the behaviour for Svelte, since an uncalled subscription will register as `undefined` anyway.
 
 On to slightly more complicated operators:
 
 ```javascript
 let acc = 0;
 const scanned = derived(count, (n, set) => {
-	acc = acc + n;
+    acc = acc + n;
     set(acc);
 });
 ```
 
-Operators like `scan` (and `concat`, `take` and `skip`) can all be achieved with an external variable
+Operators like `scan` (and `concat`, `take` and `skip`)
+can all be achieved with reference external variable outside the derived store.
+Operators aren't saving much code yet, though it's worth considering
+how you would export the `scanned` store (more on that in a moment).
+
+
 
 With the `debounce` and `throttle` operators there's a chance for extension.
 Lo-dash's debounce provides `flush()` and `cancel()` methods.
@@ -250,11 +245,10 @@ or ignore the result from pending Promises (`discard`)
 ```javascript
 const user = writable({id:'default'});
 const avatar = user.pipe(pluck('id'))
-				   .pipe(wait(id => fetch(`/profiles/${id}.png`)));
+                   .pipe(wait(id => fetch(`/profiles/${id}.png`)));
 ```
 
-Operators like `wait` allow for all the queue logic to be encapsulated and reused.
-This gets to a more general issue with derived stores: they're readonly.
+Extended stores get to a more general issue with derived stores: they're readonly.
 This makes perfect sense, the derived store is meant to reflect the up-to-date state of all its source stores
 (run through a transform function).
 
@@ -275,18 +269,19 @@ What if I want to clear the list? The `concat` operator can provide a `clear()` 
 
 ```javascript
 function concat() -> {
-	subscribe, pipe,
+    subscribe, pipe,
     clear()
     set, update
 }
 ```
+
 Actually, the `clear` method is a shorthand, since the `writable` store methods `set` and `update` are included too.
 `concat` is a _writable operator_. It doesn't care if you want to filter it's list or overwrite it.
 
 Concat is perhaps too narrowly defined an operator, since it's just scan (specifically `scan((acc,item) => [...acc, item])`).
 `scan` contains the core principle: an external variable updated by an iterator.
 
-This may be too permissive, but you can reintroduce readonly permission with the `readonly` operator:
+A fully writable store may be too permissive, but you can reintroduce readonly permission with the `readonly` operator:
 
 ```javascript
 const score = count.pipe(scan((acc, n) => acc + n, 0));
@@ -296,7 +291,7 @@ const read_native = score.pipe(({subscribe, pipe}) => ({subscribe, pipe}));
 ```
 
 Readonly is so simple, you can also write your own operator as a one-liner.
-Pipes also provide a handy way to create custom stores : )
+Yes, pipes also provide a handy way to create custom stores : )
 
 ```javascript
 const user = writable({});
@@ -310,4 +305,20 @@ const custom = user.pipe(({subscribe, pipe, set, update}) => ({
     }
 }));
 ```
+
+#### A note on initialisation
+
+When subscribing to a `writable` store, the subscription callback is immediately fired with the current value.
+I presume this is because of Svelte's design which immediately subscribes to all referenced stores (eg with `$count`).
+Often you have a store with no initial state (like an _authenticated_ user store).
+For any derived store with a filter, the initial state may not pass the filter function, so you certainly don't want it fire.
+To address this I've added one more line to the `writable` subscribe function
+
+```javascript
+    if(value !== undefined) {
+        run(value);
+    }
+```
+
+This doesn't change the behaviour for Svelte, since an uncalled subscription will register as `undefined` anyway.
 
