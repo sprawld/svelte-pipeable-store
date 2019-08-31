@@ -16,6 +16,8 @@ npm install 'svelte-pipeable-store';
 
 ### Usage
 
+[I've also made an example REPL with (slightly) better examples](https://svelte.dev/repl/df4cbb0aaac44b769a3cbeed0cb0af59?version=3.9.1)
+
 Similarish syntax to RxJS. [Read the API docs](https://github.com/sprawld/svelte-pipeable-store/blob/master/API.md)
 
 ```javascript
@@ -42,11 +44,9 @@ const score_elem = score.pipe(                          // if a store's state ca
 )
 ```
 
-[I've also made an example REPL with a counter](https://svelte.dev/repl/df4cbb0aaac44b769a3cbeed0cb0af59?version=3.9.1)
-
 Currently this is a speculative project (feedback welcome!)
-But I think `pipe` is a useful addition to Svelte's store pattern.
-Here's my pitch for why it should be added:
+But I think `pipe` is a useful addition to Svelte's store.
+Here's are some reasons I think it should be added:
 
 ## My Pitch
 
@@ -178,8 +178,8 @@ I haven't mentioned yet the `derived` store. Which you could argue performs all 
 Actually it can do a lot more: particularly allowing multiple inputs.
 
 Piped operators provide a more readable, declarative syntax, which is good in-and-of itself.
-And while `pipe` adds little extra weight codebase, a toolkit of Operators does.
-Alternatively users could be asked to write their own,
+But I realise while `pipe` adds little extra weight codebase, adding a bunch of Operators does.
+Alternatively users could write their own,
 but then why wouldn't you use a `derived` store?
 
 I'm going to argue that piped operators provide helpful function encapsulation & pattern reuse. 
@@ -204,9 +204,12 @@ const filtered = derived(count, (n, set) => {
 });
 ```
 
+#### External Variable Operators
 
-
-On to slightly more complicated operators:
+Operators like `scan` (and `concat`, `take` and `skip`)
+can all be achieved with reference external variable outside the derived store.
+Operators aren't saving much code yet, though it's worth considering
+how you would export the `scanned` store (more on that in a moment).
 
 ```javascript
 let acc = 0;
@@ -215,13 +218,6 @@ const scanned = derived(count, (n, set) => {
     set(acc);
 });
 ```
-
-Operators like `scan` (and `concat`, `take` and `skip`)
-can all be achieved with reference external variable outside the derived store.
-Operators aren't saving much code yet, though it's worth considering
-how you would export the `scanned` store (more on that in a moment).
-
-
 
 With the `debounce` and `throttle` operators there's a chance for extension.
 Lo-dash's debounce provides `flush()` and `cancel()` methods.
@@ -282,8 +278,24 @@ Actually, the `clear` method is a shorthand, since the `writable` store methods 
 
 Concat is perhaps too narrowly defined an operator, since it's just scan (specifically `scan((acc,item) => [...acc, item])`).
 `scan` contains the core principle: an external variable updated by an iterator.
+You want to update the state predictably from one or more source stores,
+but also access to the state.
 
-A fully writable store may be too permissive, but you can reintroduce readonly permission with the `readonly` operator:
+```javascript
+const preferences = user.pipe(
+    pluck('preferences'),
+    scan((data, preferences) => ({...data, ...preferences}), defaultPrefs)
+);
+
+function nightMode(bool) {
+    preferences.update(data => ({...data, nightMode: bool}));
+}
+```
+
+A fully writable store may be too permissive,
+but you may make a custom store - which is a lot easier to create when
+you have `set` and `update` methods.
+And you can reintroduce readonly permission with the `readonly` operator:
 
 ```javascript
 const score = count.pipe(scan((acc, n) => acc + n, 0));
@@ -318,13 +330,13 @@ Unlike the `derived` store, these have no mapping function, but you can now use 
 ```javascript
 
 // user subscribes with object with same keys, and values of each store
-// zip also works for arrays, a-la the derived store
+// zip also works for arrays, like the derived store
 
 const user = zip({
     user: userStore,
     messages: messageStore,
     preferences: preferenceStore
-});
+}); // => {user, messages, preferences}
 
 // destination updates with any new message from any source
 
@@ -332,10 +344,12 @@ const messages = merge(
     messagesStore,
     otherMessagesStore,
     systemMessagesStore
-);
+);  // => message
 
-// whenever user updates, login screen updates with the latest value from systemMessagesStore
-const loginScreen = user.pipe(getLatestFrom(systemMessagesStore));
+// whenever user store updates, loginScreen store updates with the latest value from systemMessagesStore
+const loginScreen = user.pipe(
+    getLatestFrom(systemMessagesStore, otherMessagesStore)
+); // => [user, systemMessage, otherMessage]
 
 ```
 
