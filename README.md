@@ -16,7 +16,7 @@ npm install 'svelte-pipeable-store';
 
 ### Usage
 
-[I've also made an example REPL with (slightly) better examples](https://svelte.dev/repl/df4cbb0aaac44b769a3cbeed0cb0af59?version=3.9.1)
+[I've also made a REPL with (slightly) better examples](https://svelte.dev/repl/df4cbb0aaac44b769a3cbeed0cb0af59?version=3.9.1)
 
 Similarish syntax to RxJS. [Read the API docs](https://github.com/sprawld/svelte-pipeable-store/blob/master/API.md)
 
@@ -162,8 +162,7 @@ count.set(3); // score: 9
 count.set(4); // score: 12  total 18
 
 ```
-Other operators shamelessly copied from RxJS include `tap`, `pluck` and `concat`.
-Operators to limit updates like `skip`, `take`, 
+Other operators shamelessly copied from RxJS include `tap`, `pluck`, `skip`, `take`, 
 and time-based operations like `buffer`, `debounce` and `throttle`.
 I also created a `wait` operator to deal with async operations.
 
@@ -184,12 +183,13 @@ but then why wouldn't you use a `derived` store?
 
 I'm going to argue that piped operators provide helpful function encapsulation & pattern reuse. 
 It retains the simplicity of the original store API, while allowing space for some extensions.
-And that a few useful patterns (at least `map`,`filter` and `scan`, `debounce` and `wait`) 
+And that a few useful patterns (at least `map`,`filter`, `scan`, `debounce` and `wait`) 
 are worthy of providing out-of-the-box.
 
 If we start with the `map` operator, this can be done trivially with a `derived` store:
 
 ```javascript
+// equivalent to count.pipe(map(n => n*3))
 const mapped = derived(count, n => n*3);
 ```
 
@@ -197,6 +197,7 @@ const mapped = derived(count, n => n*3);
 (side note: did you know that `fn.length` returns the number of arguments a function has? Because I did not)
 
 ```javascript
+// equivalent to count.pipe(filter(n => n%2 === 0))
 const filtered = derived(count, (n, set) => {
     if(n%2 === 0) {
         set(n);
@@ -212,6 +213,7 @@ Operators aren't saving much code yet, though it's worth considering
 how you would export the `scanned` store (more on that in a moment).
 
 ```javascript
+// somewhat equivalent to count.pipe(scan((acc,n) => acc+n, 0))
 let acc = 0;
 const scanned = derived(count, (n, set) => {
     acc = acc + n;
@@ -248,10 +250,10 @@ const avatar = user.pipe(pluck('id'))
 
 Extended stores get to a more general issue with derived stores: they're readonly.
 This makes perfect sense, the derived store is meant to reflect the up-to-date state of all its source stores
-(run through a transform function).
+(mapped by a transform function).
 
 This is not the same when we have an external variable.
-Take the `concat` operator, which appends each new value to an array.
+Consider the `concat` operator, which appends each new value to an array.
 
 ```javascript
 
@@ -276,7 +278,7 @@ function concat() -> {
 Actually, the `clear` method is a shorthand, since the `writable` store methods `set` and `update` are included too.
 `concat` is a _writable operator_. It doesn't care if you want to filter it's list or overwrite it.
 
-Concat is perhaps too narrowly defined an operator, since it's just scan (specifically `scan((acc,item) => [...acc, item])`).
+`concat` is perhaps too narrowly defined an operator, since it's just scan (specifically `scan((acc,item) => [...acc, item])`).
 `scan` contains the core principle: an external variable updated by an iterator.
 You want to update the state predictably from one or more source stores,
 but also access to the state.
@@ -298,7 +300,9 @@ you have `set` and `update` methods.
 And you can reintroduce readonly permission with the `readonly` operator:
 
 ```javascript
+// writable store
 const score = count.pipe(scan((acc, n) => acc + n, 0));
+// readable store
 const read_score = score.pipe(readonly());
 // equivalent:
 const read_native = score.pipe(({subscribe, pipe}) => ({subscribe, pipe}));
