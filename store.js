@@ -1,5 +1,5 @@
 
-import {noop, safe_not_equal, is_function, run_all} from './internal.js';
+import {noop, is_function, run_all} from './internal.js';
 
 const subscriber_queue = [];
 /**
@@ -19,22 +19,20 @@ function readable(value, start) {
 function writable(value, start = noop) {
     let stop;
     const subscribers = [];
-    function set(new_value, no_check = false) {
-        if (no_check || safe_not_equal(value, new_value)) {
-            value = new_value;
-            if (stop) { // store is ready
-                const run_queue = !subscriber_queue.length;
-                for (let i = 0; i < subscribers.length; i += 1) {
-                    const s = subscribers[i];
-                    s[1]();
-                    subscriber_queue.push(s, value);
+    function set(new_value) {
+        value = new_value;
+        if (stop) { // store is ready
+            const run_queue = !subscriber_queue.length;
+            for (let i = 0; i < subscribers.length; i += 1) {
+                const s = subscribers[i];
+                s[1]();
+                subscriber_queue.push(s, value);
+            }
+            if (run_queue) {
+                for (let i = 0; i < subscriber_queue.length; i += 2) {
+                    subscriber_queue[i][0](subscriber_queue[i + 1]);
                 }
-                if (run_queue) {
-                    for (let i = 0; i < subscriber_queue.length; i += 2) {
-                        subscriber_queue[i][0](subscriber_queue[i + 1]);
-                    }
-                    subscriber_queue.length = 0;
-                }
+                subscriber_queue.length = 0;
             }
         }
     }

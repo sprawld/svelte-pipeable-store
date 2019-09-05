@@ -1,8 +1,8 @@
 {
   "name": "svelte-pipeable-store",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Fork of Svelte v3 store with pipe method",
-  "main": "store.js",
+  "main": "index.js",
   "type": "module",
   "scripts": {
     "test": "mocha --require esm test/*.js"
