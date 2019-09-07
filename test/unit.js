@@ -1,11 +1,20 @@
 
-import {writable} from '../store.js';
+// import {writable} from '../store.js';
 
 import {expect} from 'chai';
 
+// import {
+//     filter, map, scan, tap, wait, startWith, zip
+// } from '../operators/index.js';
+
 import {
-    filter, map, scan, tap, wait, startWith, zip
-} from '../operators/index.js';
+    writable,
+    filter, map, scan,
+    tap,
+    wait,
+    startWith,
+    zip
+} from '../index.js';
 
 
 function pause(value, time) {
@@ -169,7 +178,29 @@ describe('async operators', () => {
     it('wait discard', done => {
 
         let a = writable(1);
-        let b = a.pipe(wait(x => pause(x, x * 100), {discard: true}));
+        let b = a.pipe(wait(x => pause(x, 100), {discard: true}));
+        let res = [];
+        b.subscribe(x => {
+            console.log(`sub ${x}`);
+            res.push(x);
+        });
+        a.set(3);
+        a.set(2);
+        a.set(3);
+        setTimeout(() => {
+            a.set(5);
+            a.set(7);
+        }, 200);
+
+        setTimeout(() => {
+            expect(res).to.deep.equal([3,7]);
+            done();
+        }, 1500);
+    });
+
+    it('wait queue', done => {
+        let a = writable(1);
+        let b = a.pipe(wait(x => pause(x, x * 100), {queue: true}));
         let res = [];
         b.subscribe(x => {
             console.log(`sub ${x}`);
@@ -179,13 +210,33 @@ describe('async operators', () => {
         a.set(2);
         a.set(3);
         a.set(5);
-        a.set(7);
+        a.set(4);
 
         setTimeout(() => {
-            expect(res).to.deep.equal([7]);
+            expect(res).to.deep.equal([1,3,2,3,5,4]);
             done();
-        }, 1500);
+        }, 1900);
     });
+
+    it('wait exhaust', done => {
+        let a = writable(1);
+        let b = a.pipe(wait(x => pause(x, x * 100), {exhaust: true}));
+        let res = [];
+        b.subscribe(x => {
+            console.log(`sub ${x}`);
+            res.push(x);
+        });
+        a.set(3);
+        a.set(2);
+        a.set(3);
+        a.set(5);
+        a.set(4);
+
+        setTimeout(() => {
+            expect(res).to.deep.equal([1,4]);
+            done();
+        }, 1900);
+    })
 
 });
 

@@ -12,11 +12,11 @@ import {readable} from '../store.js';
  *
  *  @params {Function} iterator Maps the src store to a Promise
  *  @params {Object} [options={}] Options
+ *  @params {boolean} [options.discard=false] If true, when the src subscription fires, pending Promises are ignored
  *  @params {boolean} [options.queue=false] If true run iterator in series
  *   Even with queue as false the operator will not update when there is already a newer item
  *  @params {boolean} [options.exhaust=false] If true when a promise is pending, subsequent calls are ignored
  *   Trailing call will be performed at the end to ensure piped store is eventually up-to-date
- *  @params {boolean} [options.discard=false] If true, when the src subscription fires, pending Promises are ignored
  *  @params {Function} [options.error] Error handing function
  *   Note if you want errors to return a value to the destination store, you should add a catch block to your Promise.
  *  @returns {{subscribe, pipe}}
