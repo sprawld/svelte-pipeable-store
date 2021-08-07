@@ -1,7 +1,7 @@
 
 function noop() { }
 function run_all(fns) {
-    fns.forEach(run);
+    fns.forEach(fn => fn());
 }
 function is_function(thing) {
     return typeof thing === 'function';

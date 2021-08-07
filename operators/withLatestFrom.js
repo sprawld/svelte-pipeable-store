@@ -16,7 +16,7 @@ export function withLatestFrom(...sources) {
         return readable(undefined, set => {
             let data = new Array(length);
             let subs = [
-                ...sources.map((sub,index) => s.subscribe(value => {
+                ...sources.map((sub,index) => sub.subscribe(value => {
                     data[index] = value;
                 })),
                 src.subscribe(value => {
